@@ -1,3 +1,4 @@
+
 name: Build Android APK
 
 on:
@@ -13,9 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract project
-        run: unzip -o scooter_control.zip -d .
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -29,6 +27,23 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      - name: Extract project and find root
+        run: |
+          mkdir -p /tmp/scooter-src
+          unzip -o scooter_control.zip -d /tmp/scooter-src
+          PROJECT_DIR=$(dirname "$(find /tmp/scooter-src -name pubspec.yaml -type f -print -quit)")
+          if [ "$PROJECT_DIR" = "." ] || [ ! -f "$PROJECT_DIR/pubspec.yaml" ]; then
+            echo "Flutter project not found in ZIP"
+            exit 1
+          fi
+          cp -a "$PROJECT_DIR"/. .
+
+      - name: Create Android project
+        run: flutter create --platforms=android,ios .
+
+      - name: Install Android API 36
+        run: sdkmanager "platforms;android-36"
 
       - name: Set compile SDK 36
         run: |
