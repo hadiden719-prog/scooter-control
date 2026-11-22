@@ -47,22 +47,24 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Set compile SDK 36 for all Android modules
+        
+      - name: Fix file_picker Android SDK
         run: |
-          find "$HOME/.pub-cache" \( -name build.gradle -o -name build.gradle.kts \) -type f | while read file; do
-            if grep -q "flutter.compileSdkVersion" "$file"; then
-              sed -i 's/flutter.compileSdkVersion/36/g' "$file"
-            fi
-          done
+          FILE=$(find "$HOME/.pub-cache" -path '*/file_picker-*/android/build.gradle' -type f | head -n 1)
 
-          if [ -f android/app/build.gradle.kts ]; then
-            sed -i 's/flutter.compileSdkVersion/36/g' android/app/build.gradle.kts
+          if [ -z "$FILE" ]; then
+            echo "file_picker build.gradle not found"
+            exit 1
           fi
 
-          if [ -f android/app/build.gradle ]; then
-            sed -i 's/flutter.compileSdkVersion/36/g' android/app/build.gradle
-          fi
+          echo "Patching: $FILE"
+
+          sed -i -E \
+            's/(compileSdkVersion[[:space:]]+)[0-9]+/\1 36/; s/(compileSdk[[:space:]]*=[[:space:]]*)[0-9]+/\1 36/' \
+            "$FILE"
+
+          grep -n -E 'compileSdk' "$FILE"
+
 
       - name: Build APK
         run: flutter build apk --release
