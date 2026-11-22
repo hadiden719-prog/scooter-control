@@ -15,7 +15,14 @@ jobs:
 
       - name: Extract project
         run: |
-          unzip -o scooter_control_foundation.zip -d .
+          mkdir -p /tmp/scooter-src
+          unzip -q scooter_control.zip -d /tmp/scooter-src
+          PROJECT_DIR=$(find /tmp/scooter-src -name pubspec.yaml -printf '%h\n' | head -n 1)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "pubspec.yaml not found"
+            exit 1
+          fi
+          cp -a "$PROJECT_DIR"/. .
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -27,6 +34,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      - name: Create Android project
+        run: flutter create --platforms=android,ios .
 
       - name: Install dependencies
         run: flutter pub get
