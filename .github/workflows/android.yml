@@ -22,13 +22,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-
-      - name: Install Android SDK 36
-        run: yes | sdkmanager "platforms;android-36"
 
       - name: Set compile SDK 36
         run: |
